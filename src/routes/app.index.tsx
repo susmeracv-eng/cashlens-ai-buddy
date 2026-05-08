@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, TrendingUp, ArrowDownRight, ArrowUpRight, Repeat, Pencil, Trash2 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
@@ -12,6 +14,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
+
+const CATEGORIES = ["Groceries","Dining","Transport","Shopping","Entertainment","Bills","Health","Travel","Subscriptions","Income","Other"];
 
 type Tx = {
   id: string; type: "expense" | "income"; amount: number; category: string;
@@ -32,6 +36,7 @@ function Dashboard() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [income, setIncome] = useState("");
   const [budget, setBudget] = useState("");
+  const [editTx, setEditTx] = useState<Tx | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -246,22 +251,25 @@ function Dashboard() {
           <Link to="/app/add" className="text-sm text-primary hover:underline">+ Add</Link>
         </div>
         {tx.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Nothing yet — log an expense or scan a receipt to begin.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Nothing yet — log an expense to begin.</p>
         ) : (
           <ul className="mt-3 divide-y divide-border">
             {tx.slice(0, 12).map(t => (
               <li key={t.id} className="flex items-center gap-3 py-3">
-                <div className={`grid h-9 w-9 place-items-center rounded-full ${t.type === "expense" ? "bg-destructive/10 text-destructive" : "bg-success/15 text-success-foreground"}`}>
+                <div className={`grid h-9 w-9 place-items-center rounded-full ${t.type === "expense" ? "bg-destructive/10 text-destructive" : "bg-success/15 text-success"}`}>
                   {t.type === "expense" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="truncate font-medium">{t.merchant || t.note || t.category}</div>
-                    <div className={`font-semibold ${t.type === "expense" ? "" : "text-success-foreground"}`}>{t.type === "expense" ? "-" : "+"}{fmt2(Number(t.amount))}</div>
+                    <div className={`font-semibold ${t.type === "expense" ? "" : "text-success"}`}>{t.type === "expense" ? "-" : "+"}{fmt2(Number(t.amount))}</div>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div>{t.category} · {new Date(t.occurred_on).toLocaleDateString()}</div>
-                    <button onClick={() => removeTx(t.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setEditTx(t)} className="text-muted-foreground hover:text-primary" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => removeTx(t.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -269,6 +277,79 @@ function Dashboard() {
           </ul>
         )}
       </div>
+
+      <EditTxDialog
+        tx={editTx}
+        onClose={() => setEditTx(null)}
+        onSaved={(updated) => { setTx(prev => prev.map(p => p.id === updated.id ? updated : p)); setEditTx(null); }}
+      />
     </div>
+  );
+}
+
+function EditTxDialog({ tx, onClose, onSaved }: { tx: Tx | null; onClose: () => void; onSaved: (t: Tx) => void }) {
+  const [form, setForm] = useState<Tx | null>(tx);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setForm(tx); }, [tx]);
+
+  if (!tx || !form) return null;
+
+  const save = async () => {
+    setBusy(true);
+    const { data, error } = await supabase.from("transactions").update({
+      type: form.type,
+      amount: Number(form.amount),
+      category: form.category,
+      merchant: form.merchant || null,
+      note: form.note || null,
+      occurred_on: form.occurred_on,
+    }).eq("id", form.id).select().single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Updated");
+    onSaved(data as Tx);
+  };
+
+  return (
+    <Dialog open={!!tx} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Edit transaction</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setForm({ ...form, type: "expense" })} className={`flex-1 rounded-xl border px-3 py-2 text-sm ${form.type === "expense" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Expense</button>
+            <button type="button" onClick={() => setForm({ ...form, type: "income" })} className={`flex-1 rounded-xl border px-3 py-2 text-sm ${form.type === "income" ? "border-success bg-success text-white" : "border-border"}`}>Income</button>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Amount</Label>
+            <Input type="number" step="0.01" value={String(form.amount)} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Date</Label>
+              <Input type="date" value={form.occurred_on} onChange={e => setForm({ ...form, occurred_on: e.target.value })} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Merchant</Label>
+            <Input value={form.merchant ?? ""} onChange={e => setForm({ ...form, merchant: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Note</Label>
+            <Input value={form.note ?? ""} onChange={e => setForm({ ...form, note: e.target.value })} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
