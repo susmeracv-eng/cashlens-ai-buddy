@@ -18,7 +18,7 @@ type Tx = {
   merchant: string | null; note: string | null; occurred_on: string; receipt_url: string | null;
 };
 
-const COLORS = ["oklch(0.78 0.16 165)","oklch(0.65 0.18 250)","oklch(0.78 0.18 50)","oklch(0.7 0.2 320)","oklch(0.65 0.18 25)","oklch(0.6 0.15 200)","oklch(0.7 0.13 130)"];
+const COLORS = ["oklch(0.58 0.2 285)","oklch(0.72 0.17 155)","oklch(0.65 0.2 35)","oklch(0.7 0.15 310)","oklch(0.65 0.12 250)","oklch(0.6 0.18 200)","oklch(0.78 0.14 130)"];
 
 function fmt(n: number) { return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }); }
 function fmt2(n: number) { return n.toLocaleString(undefined, { style: "currency", currency: "USD" }); }
