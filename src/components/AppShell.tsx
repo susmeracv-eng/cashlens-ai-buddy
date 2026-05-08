@@ -2,13 +2,12 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Plus, Camera, Sparkles, LogOut, Wallet } from "lucide-react";
+import { LayoutDashboard, Plus, Sparkles, LogOut, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const tabs = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/add", label: "Add", icon: Plus },
-  { to: "/app/scan", label: "Scan", icon: Camera },
   { to: "/app/ask", label: "Ask AI", icon: Sparkles },
 ];
 
