@@ -36,6 +36,7 @@ function Dashboard() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [income, setIncome] = useState("");
   const [budget, setBudget] = useState("");
+  const [editTx, setEditTx] = useState<Tx | null>(null);
 
   const load = async () => {
     if (!user) return;
