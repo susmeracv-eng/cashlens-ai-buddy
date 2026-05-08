@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, TrendingUp, ArrowDownRight, ArrowUpRight, Repeat, Pencil, Trash2 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
@@ -12,6 +14,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
+
+const CATEGORIES = ["Groceries","Dining","Transport","Shopping","Entertainment","Bills","Health","Travel","Subscriptions","Income","Other"];
 
 type Tx = {
   id: string; type: "expense" | "income"; amount: number; category: string;
