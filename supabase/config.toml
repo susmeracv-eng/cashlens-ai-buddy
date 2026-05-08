@@ -1,0 +1,10 @@
+project_id = "nygxmprgoqxfzlywunpv"
+
+[functions.parse-receipt]
+verify_jwt = true
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.insights]
+verify_jwt = true
