@@ -197,7 +197,7 @@ function Dashboard() {
                 <XAxis dataKey="day" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(v: number) => fmt2(v)} />
-                <Bar dataKey="spend" radius={[6,6,0,0]} fill="oklch(0.78 0.16 165)" />
+                <Bar dataKey="spend" radius={[6,6,0,0]} fill="oklch(0.58 0.2 285)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
