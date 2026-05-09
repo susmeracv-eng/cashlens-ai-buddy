@@ -33,17 +33,20 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password: pw,
           options: {
             data: { display_name: name },
-            emailRedirectTo: `${window.location.origin}/app`,
           },
         });
         if (error) throw error;
-        toast.success("Check your email to confirm, then sign in.");
-        setMode("signin");
+        if (data.session) {
+          nav({ to: "/app" });
+        } else {
+          toast.success("Account created! You can now sign in.");
+          setMode("signin");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
